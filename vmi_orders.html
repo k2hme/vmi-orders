@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a2332">
+<title>VMI Orders</title>
+<link rel="manifest" href="#" id="manifest-link">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:        #0f1923;
+    --surface:   #1a2332;
+    --surface2:  #243044;
+    --border:    #2e3f55;
+    --accent:    #2d7dd2;
+    --accent2:   #1db97a;
+    --warn:      #e05c3a;
+    --text:      #e8edf3;
+    --text2:     #8a9bb0;
+    --text3:     #4a5c72;
+    --yellow:    #f0c040;
+    --radius:    8px;
+    --shadow:    0 4px 24px rgba(0,0,0,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 16px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    color: #fff;
+    letter-spacing: 1px;
+  }
+
+  nav { display: flex; gap: 4px; }
+
+  nav button {
+    background: none;
+    border: none;
+    color: var(--text2);
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+
+  nav button:hover { background: var(--surface2); color: var(--text); }
+  nav button.active { background: var(--accent); color: #fff; }
+
+  /* ── Layout ── */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text2);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title::before {
+    content: '';
+    width: 3px; height: 16px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* ── Form ── */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text2);
+  }
+
+  label .req { color: var(--accent); margin-left: 2px; }
+
+  .input-wrap { position: relative; }
+
+  input, select, textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 10px 14px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(45,125,210,0.15);
+  }
+
+  input:disabled {
+    background: var(--bg);
+    color: var(--text3);
+    border-color: var(--border);
+    cursor: not-allowed;
+  }
+
+  input.locked {
+    background: var(--bg);
+    color: var(--text3);
+    border-color: var(--border);
+  }
+
+  .case-hint {
+    font-size: 12px;
+    color: var(--accent);
+    margin-top: 4px;
+    min-height: 16px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── Autocomplete ── */
+  .ac-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    z-index: 999;
+    max-height: 220px;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+  }
+
+  .ac-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.1s;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ac-item:last-child { border-bottom: none; }
+  .ac-item:hover { background: var(--accent); color: #fff; }
+
+  /* ── Buttons ── */
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.3px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #2470c0; }
+
+  .btn-success {
+    background: var(--accent2);
+    color: #fff;
+  }
+  .btn-success:hover { background: #19a36c; }
+
+  .btn-danger {
+    background: var(--warn);
+    color: #fff;
+  }
+  .btn-danger:hover { background: #c94f30; }
+
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--border); }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── Mode banner ── */
+  .mode-banner {
+    display: none;
+    padding: 10px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    letter-spacing: 0.3px;
+  }
+
+  .mode-banner.delivery {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(29,185,122,0.12);
+    border: 1px solid rgba(29,185,122,0.3);
+    color: var(--accent2);
+  }
+
+  .mode-banner.edit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(45,125,210,0.12);
+    border: 1px solid rgba(45,125,210,0.3);
+    color: var(--accent);
+  }
+
+  /* ── Orders Table ── */
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .toolbar input, .toolbar select {
+    flex: 1;
+    min-width: 140px;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .btn-sm {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 700px;
+  }
+
+  thead {
+    background: var(--surface2);
+    position: sticky;
+    top: 56px;
+  }
+
+  th {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  th:hover { color: var(--text); }
+
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tbody tr {
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  tbody tr:hover { background: var(--surface2); }
+
+  tbody tr.undelivered td:first-child {
+    border-left: 3px solid var(--accent2);
+  }
+
+  tbody tr.delivered td:first-child {
+    border-left: 3px solid var(--text3);
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .badge-pending {
+    background: rgba(29,185,122,0.15);
+    color: var(--accent2);
+  }
+
+  .badge-done {
+    background: rgba(74,92,114,0.3);
+    color: var(--text3);
+  }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    animation: modalIn 0.2s ease;
+  }
+
+  @keyframes modalIn {
+    from { transform: scale(0.95); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  .modal h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .modal p {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .modal .btn-row { margin-top: 0; }
+
+  /* ── Manage Lists ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    background: var(--bg);
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 8px;
+    text-align: center;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .tab.active { background: var(--accent); color: #fff; }
+
+  .list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    transition: background 0.1s;
+  }
+
+  .list-item:last-child { border-bottom: none; }
+  .list-item:hover { background: var(--surface2); }
+
+  .list-item-name { flex: 1; font-size: 14px; }
+  .list-item-qty {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    min-width: 80px;
+  }
+
+  .list-container {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease;
+    z-index: 2000;
+    white-space: nowrap;
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--accent2); color: var(--accent2); }
+  .toast.error   { border-color: var(--warn);    color: var(--warn);    }
+
+  /* ── Loading ── */
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text2);
+    font-size: 14px;
+  }
+
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin: 0 auto 12px;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text3);
+  }
+
+  .empty-state svg { margin-bottom: 12px; opacity: 0.4; }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 24px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    color: var(--text);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 2px;
+  }
+
+  .stat.accent .stat-num  { color: var(--accent2); }
+  .stat.accent2 .stat-num { color: var(--yellow); }
+
+  /* ── Offline banner ── */
+  .offline-banner {
+    display: none;
+    background: rgba(224,92,58,0.15);
+    border: 1px solid rgba(224,92,58,0.3);
+    color: var(--warn);
+    padding: 8px 16px;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .offline-banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- Offline banner -->
+<div class="offline-banner" id="offlineBanner">⚠️ You are offline — changes will sync when connection is restored</div>
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">VMI</div>
+    VMI Orders
+  </div>
+  <nav>
+    <button class="active" onclick="showScreen('entry')" id="nav-entry">New Order</button>
+    <button onclick="showScreen('orders')" id="nav-orders">Orders</button>
+    <button onclick="showScreen('lists')" id="nav-lists">Lists</button>
+  </nav>
+</header>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN: ORDER ENTRY
+═══════════════════════════════════════════════════ -->
+<main>
+<div id="screen-entry" class="screen active">
+
+  <div class="mode-banner" id="modeBanner"></div>
+
+  <div class="card">
+    <div class="card-title">Order Details</div>
+    <div class="form-grid">
+
+      <div class="field">
+        <label>Date Ordered <span class="req">*</span></label>
+        <input type="date" id="dateOrdered">
+      </div>
+
+      <div class="field">
+        <label>Company <span class="req">*</span></label>
+        <div class="input-wrap">
+          <input type="text" id="company" autocomplete="off" placeholder="Type to search...">
+          <div class="ac-dropdown" id="ac-company" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Location <span class="req">*</span></label>
+        <div class="input-wrap">
+          <input type="text" id="location" autocomplete="off" placeholder="Type to search...">
+          <div class="ac-dropdown" id="ac-location" style="display:none"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Product # <span class="req">*</span></label>
+        <div class="input-wrap">
+          <input type="text" id="product" autocomplete="off" placeholder="Type to search...">
+          <div class="ac-dropdown" id="ac-product" style="display:none"></div>
+        </div>
+        <div class="case-hint" id="caseHint"></div>
+      </div>
+
+      <div class="field">
+        <label>Qty Ordered <span class="req">*</span></label>
+        <input type="number" id="qtyOrdered" min="0" placeholder="0">
+      </div>
+
+      <div class="field">
+        <label>Comments</label>
+        <input type="text" id="comments" placeholder="Optional notes...">
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card" id="deliveryCard">
+    <div class="card-title">Delivery Information</div>
+    <div class="form-grid">
+
+      <div class="field">
+        <label>Date Delivered</label>
+        <input type="date" id="dateDelivered">
+      </div>
+
+      <div class="field">
+        <label>Qty Delivered</label>
+        <input type="number" id="qtyDelivered" min="0" placeholder="0">
+      </div>
+
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-primary" id="submitBtn" onclick="submitOrder()">Submit Order</button>
+    <button class="btn-ghost" onclick="cancelEntry()">Cancel</button>
+    <button class="btn-danger" id="deleteBtn" onclick="confirmDelete()" style="display:none">Delete</button>
+    <button class="btn-ghost" style="margin-left:auto" onclick="confirmExit()">Exit</button>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN: ORDERS LIST
+═══════════════════════════════════════════════════ -->
+<div id="screen-orders" class="screen">
+
+  <div class="stats-bar" id="statsBar">
+    <div class="stat"><div class="stat-num" id="statTotal">—</div><div class="stat-label">Total Orders</div></div>
+    <div class="stat accent"><div class="stat-num" id="statPending">—</div><div class="stat-label">Pending Delivery</div></div>
+    <div class="stat accent2"><div class="stat-num" id="statDelivered">—</div><div class="stat-label">Delivered</div></div>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <select id="filterCol" style="max-width:160px">
+        <option value="">Filter by...</option>
+        <option value="company">Company</option>
+        <option value="location">Location</option>
+        <option value="product">Product #</option>
+        <option value="date_ordered">Date Ordered</option>
+        <option value="date_delivered">Date Delivered</option>
+      </select>
+      <input type="text" id="filterVal" placeholder="Search..." oninput="applyFilter()">
+      <button class="btn-success btn-sm" onclick="showUndelivered()">Undelivered</button>
+      <button class="btn-ghost btn-sm" onclick="clearFilter()">Show All</button>
+      <button class="btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+    </div>
+
+    <div id="ordersContent">
+      <div class="loading"><div class="spinner"></div>Loading orders...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN: MANAGE LISTS
+═══════════════════════════════════════════════════ -->
+<div id="screen-lists" class="screen">
+  <div class="card">
+    <div class="tabs">
+      <button class="tab active" onclick="switchListTab('companies')">Companies</button>
+      <button class="tab" onclick="switchListTab('locations')">Locations</button>
+      <button class="tab" onclick="switchListTab('products')">Products</button>
+    </div>
+
+    <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap">
+      <input type="text" id="newListItem" placeholder="New item..." style="flex:1; min-width:140px">
+      <input type="number" id="newCaseQty" placeholder="Case Qty" style="width:110px; display:none">
+      <button class="btn-success" onclick="addListItem()">Add</button>
+    </div>
+
+    <div class="list-container" id="listContainer">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════
+     MODALS
+═══════════════════════════════════════════════════ -->
+
+<!-- Action modal -->
+<div class="modal-overlay" id="actionModal">
+  <div class="modal">
+    <h3>Select Action</h3>
+    <p id="actionModalInfo"></p>
+    <div class="btn-row" style="flex-direction:column; gap:8px">
+      <button class="btn-success" id="deliveryBtn" onclick="startDeliveryMode()" style="display:none">📦 Enter Delivery Info</button>
+      <button class="btn-primary" onclick="startEditMode()">✏️ Edit Record</button>
+      <button class="btn-ghost" onclick="closeModal('actionModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>Delete Record?</h3>
+    <p>This action cannot be undone.</p>
+    <div class="btn-row">
+      <button class="btn-danger" onclick="deleteOrder()">Delete</button>
+      <button class="btn-ghost" onclick="closeModal('deleteModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm exit modal -->
+<div class="modal-overlay" id="exitModal">
+  <div class="modal">
+    <h3>Unsaved Changes</h3>
+    <p>You have unsaved changes. What would you like to do?</p>
+    <div class="btn-row" style="flex-direction:column; gap:8px">
+      <button class="btn-primary" onclick="saveAndExit()">Save and Exit</button>
+      <button class="btn-ghost" onclick="discardAndExit()">Discard and Exit</button>
+      <button class="btn-ghost" onclick="closeModal('exitModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit case qty modal -->
+<div class="modal-overlay" id="editQtyModal">
+  <div class="modal">
+    <h3>Edit Case Qty</h3>
+    <p id="editQtyProduct"></p>
+    <input type="number" id="editQtyInput" min="1" style="margin-bottom:16px">
+    <div class="btn-row">
+      <button class="btn-primary" onclick="saveEditQty()">Save</button>
+      <button class="btn-ghost" onclick="closeModal('editQtyModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════
+     FIREBASE + APP LOGIC
+═══════════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getFirestore, collection, getDocs,
+         addDoc, updateDoc, deleteDoc,
+         doc, setDoc, getDoc }                  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+// ── Firebase init ──
+const firebaseConfig = {
+  apiKey:            "AIzaSyAyMZZL8lTV2gE7yX7uoJhhiVewrdxfW6E",
+  authDomain:        "vmi-orders.firebaseapp.com",
+  projectId:         "vmi-orders",
+  storageBucket:     "vmi-orders.firebasestorage.app",
+  messagingSenderId: "308552853988",
+  appId:             "1:308552853988:web:8ac1c71e3be807b019bff1"
+};
+
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── App state ──
+let orders       = [];   // [{id, company, date_ordered, location, product, qty_ordered, qty_delivered, date_delivered, comments}]
+let appLists     = { companies: [], locations: [], products: [] };
+let currentMode  = 'new';   // 'new' | 'delivery' | 'edit'
+let editingId    = null;
+let currentListTab = 'companies';
+let editingProductEntry = null;
+let formDirty    = false;
+let filteredOrders = [];
+
+// ── Offline detection ──
+window.addEventListener('online',  () => document.getElementById('offlineBanner').classList.remove('show'));
+window.addEventListener('offline', () => document.getElementById('offlineBanner').classList.add('show'));
+if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
+
+// ── Helpers ──
+const $ = id => document.getElementById(id);
+
+function toast(msg, type='success') {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className   = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function closeModal(id) { $(id).classList.remove('open'); }
+
+function formatDate(val) {
+  if (!val) return '';
+  // Convert YYYY-MM-DD (HTML date input) or MM-DD-YYYY to display
+  if (val.includes('-') && val.length === 10) {
+    const parts = val.split('-');
+    if (parts[0].length === 4) {
+      // YYYY-MM-DD → MM/DD/YYYY
+      return `${parts[1]}/${parts[2]}/${parts[0]}`;
+    }
+    // MM-DD-YYYY → MM/DD/YYYY
+    return val.replace(/-/g, '/');
+  }
+  return val;
+}
+
+function toInputDate(val) {
+  // Convert MM-DD-YYYY or MM/DD/YYYY to YYYY-MM-DD for HTML date input
+  if (!val) return '';
+  const clean = val.replace(/\//g, '-');
+  const parts = clean.split('-');
+  if (parts.length !== 3) return '';
+  if (parts[0].length === 4) return clean; // already YYYY-MM-DD
+  return `${parts[2]}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
+}
+
+function fromInputDate(val) {
+  // Convert YYYY-MM-DD to MM-DD-YYYY for storage
+  if (!val) return '';
+  const parts = val.split('-');
+  if (parts.length !== 3 || parts[0].length !== 4) return val;
+  return `${parts[1]}-${parts[2]}-${parts[0]}`;
+}
+
+function getProductName(entry) {
+  return entry.includes('|') ? entry.split('|')[0].trim() : entry.trim();
+}
+
+function getProductCaseQty(entry) {
+  return entry.includes('|') ? entry.split('|')[1].trim() : '';
+}
+
+// ── Load data ──
+async function loadOrders() {
+  try {
+    const snap = await getDocs(collection(db, 'orders'));
+    orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    // Cache locally
+    localStorage.setItem('vmi_orders', JSON.stringify(orders));
+  } catch(e) {
+    console.warn('Firebase offline, loading cache:', e);
+    const cached = localStorage.getItem('vmi_orders');
+    if (cached) orders = JSON.parse(cached);
+  }
+  filteredOrders = [...orders];
+  renderOrders(filteredOrders);
+  updateStats();
+}
+
+async function loadLists() {
+  try {
+    const snap = await getDoc(doc(db, 'config', 'lists'));
+    if (snap.exists()) {
+      const data = snap.data();
+      appLists.companies = data.companies || [];
+      appLists.locations  = data.locations  || [];
+      appLists.products   = data.products   || [];
+    }
+    localStorage.setItem('vmi_lists', JSON.stringify(appLists));
+  } catch(e) {
+    console.warn('Firebase offline, loading lists cache:', e);
+    const cached = localStorage.getItem('vmi_lists');
+    if (cached) appLists = JSON.parse(cached);
+  }
+}
+
+async function saveLists() {
+  try {
+    await setDoc(doc(db, 'config', 'lists'), {
+      companies: appLists.companies,
+      locations:  appLists.locations,
+      products:   appLists.products
+    });
+    localStorage.setItem('vmi_lists', JSON.stringify(appLists));
+  } catch(e) {
+    console.warn('Save lists offline:', e);
+    localStorage.setItem('vmi_lists', JSON.stringify(appLists));
+  }
+}
+
+// ── Screens ──
+window.showScreen = function(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  $(`screen-${name}`).classList.add('active');
+  $(`nav-${name}`).classList.add('active');
+  if (name === 'orders') { loadOrders(); }
+  if (name === 'lists')  { renderListTab(); }
+};
+
+// ── Entry form ──
+function setMode(mode) {
+  currentMode = mode;
+  const banner    = $('modeBanner');
+  const submitBtn = $('submitBtn');
+  const deleteBtn = $('deleteBtn');
+  const delivCard = $('deliveryCard');
+
+  // Reset all fields enabled
+  ['dateOrdered','company','location','product','qtyOrdered','comments',
+   'dateDelivered','qtyDelivered'].forEach(id => {
+    const el = $(id);
+    el.disabled = false;
+    el.classList.remove('locked');
+  });
+
+  banner.className = 'mode-banner';
+  banner.style.display = 'none';
+  deleteBtn.style.display = 'none';
+
+  if (mode === 'new') {
+    submitBtn.textContent = 'Submit Order';
+    delivCard.style.opacity = '0.6';
+  } else if (mode === 'delivery') {
+    submitBtn.textContent = 'Save Delivery';
+    banner.className = 'mode-banner delivery';
+    banner.innerHTML = '📦 Entering Delivery Information — order fields are locked';
+    banner.style.display = 'flex';
+    delivCard.style.opacity = '1';
+    ['dateOrdered','company','location','product','qtyOrdered'].forEach(id => {
+      $(id).disabled = true;
+      $(id).classList.add('locked');
+    });
+    $('dateDelivered').focus();
+  } else if (mode === 'edit') {
+    submitBtn.textContent = 'Update Order';
+    banner.className = 'mode-banner edit';
+    banner.innerHTML = '✏️ Editing Record';
+    banner.style.display = 'flex';
+    deleteBtn.style.display = 'inline-block';
+    delivCard.style.opacity = '1';
+  }
+}
+
+function populateForm(order) {
+  $('dateOrdered').value   = toInputDate(order.date_ordered   || '');
+  $('company').value       = order.company       || '';
+  $('location').value      = order.location      || '';
+  $('product').value       = order.product       || '';
+  $('qtyOrdered').value    = order.qty_ordered   || '';
+  $('dateDelivered').value = toInputDate(order.date_delivered || '');
+  $('qtyDelivered').value  = order.qty_delivered || '';
+  $('comments').value      = order.comments      || '';
+  updateCaseHint(order.product || '');
+}
+
+function getFormData() {
+  return {
+    company:        $('company').value.trim(),
+    date_ordered:   fromInputDate($('dateOrdered').value),
+    location:       $('location').value.trim(),
+    product:        $('product').value.trim(),
+    qty_ordered:    $('qtyOrdered').value.replace(/,/g,'').trim(),
+    qty_delivered:  $('qtyDelivered').value.replace(/,/g,'').trim(),
+    date_delivered: fromInputDate($('dateDelivered').value),
+    comments:       $('comments').value.trim(),
+  };
+}
+
+function validateForm() {
+  if (currentMode === 'delivery') {
+    if (!$('dateDelivered').value && !$('qtyDelivered').value) {
+      toast('Please enter delivery date or quantity.', 'error');
+      return false;
+    }
+    return true;
+  }
+  const required = [
+    ['dateOrdered', 'Date Ordered'],
+    ['company',     'Company'],
+    ['location',    'Location'],
+    ['product',     'Product #'],
+    ['qtyOrdered',  'Qty Ordered'],
+  ];
+  for (const [id, name] of required) {
+    if (!$(id).value.trim()) {
+      toast(`${name} is required.`, 'error');
+      $(id).focus();
+      return false;
+    }
+  }
+  return true;
+}
+
+window.submitOrder = async function() {
+  if (!validateForm()) return;
+  const data = getFormData();
+
+  // Auto-add to lists
+  if (data.company  && !appLists.companies.includes(data.company))
+    appLists.companies.push(data.company);
+  if (data.location && !appLists.locations.includes(data.location))
+    appLists.locations.push(data.location);
+
+  const existingProd = appLists.products.find(p => getProductName(p) === data.product);
+  if (data.product && !existingProd)
+    appLists.products.push(`${data.product}|1`);
+
+  saveLists();
+
+  try {
+    if (editingId) {
+      await updateDoc(doc(db, 'orders', editingId), data);
+      toast('Order updated!');
+    } else {
+      await addDoc(collection(db, 'orders'), data);
+      toast('Order saved!');
+    }
+  } catch(e) {
+    toast('Saved offline — will sync when online.', 'error');
+  }
+
+  resetForm();
+  formDirty = false;
+};
+
+function resetForm(keepDate=true) {
+  const lastDate = $('dateOrdered').value;
+  ['dateOrdered','company','location','product','qtyOrdered',
+   'dateDelivered','qtyDelivered','comments'].forEach(id => $(id).value = '');
+  if (keepDate && lastDate) $('dateOrdered').value = lastDate;
+  else $('dateOrdered').value = new Date().toISOString().split('T')[0];
+  $('caseHint').textContent = '';
+  editingId = null;
+  setMode('new');
+  formDirty = false;
+  $('dateOrdered').focus();
+}
+
+window.cancelEntry = function() {
+  if (formDirty) {
+    if (!confirm('Discard unsaved changes?')) return;
+  }
+  resetForm(false);
+};
+
+window.confirmExit = function() {
+  if (formDirty) {
+    $('exitModal').classList.add('open');
+  } else {
+    window.close();
+    toast('You can close this browser tab.');
+  }
+};
+
+window.saveAndExit    = function() { submitOrder().then(() => { closeModal('exitModal'); toast('Saved! You can close this tab.'); }); };
+window.discardAndExit = function() { closeModal('exitModal'); formDirty = false; resetForm(false); toast('Changes discarded.'); };
+
+// ── Delete ──
+window.confirmDelete = function() { $('deleteModal').classList.add('open'); };
+
+window.deleteOrder = async function() {
+  if (!editingId) return;
+  try {
+    await deleteDoc(doc(db, 'orders', editingId));
+    toast('Record deleted.');
+  } catch(e) {
+    toast('Delete failed — check connection.', 'error');
+  }
+  closeModal('deleteModal');
+  resetForm(false);
+  formDirty = false;
+};
+
+// ── Orders list ──
+function renderOrders(list) {
+  const container = $('ordersContent');
+  if (!list.length) {
+    container.innerHTML = '<div class="empty-state"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg><div>No orders found</div></div>';
+    return;
+  }
+
+  // Sort: undelivered first
+  const sorted = [...list].sort((a,b) => {
+    const aD = a.date_delivered ? 1 : 0;
+    const bD = b.date_delivered ? 1 : 0;
+    return aD - bD;
+  });
+
+  const rows = sorted.map(o => `
+    <tr class="${o.date_delivered ? 'delivered' : 'undelivered'}"
+        onclick="selectOrder('${o.id}')">
+      <td title="${o.company}">${o.company}</td>
+      <td>${formatDate(o.date_ordered)}</td>
+      <td title="${o.location}">${o.location}</td>
+      <td title="${o.product}">${o.product}</td>
+      <td>${o.qty_ordered}</td>
+      <td>${o.qty_delivered || '—'}</td>
+      <td>${formatDate(o.date_delivered) || '—'}</td>
+      <td><span class="badge ${o.date_delivered ? 'badge-done' : 'badge-pending'}">${o.date_delivered ? 'Delivered' : 'Pending'}</span></td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Company</th><th>Ordered</th><th>Location</th>
+            <th>Product #</th><th>Ord Qty</th><th>Dlv Qty</th>
+            <th>Dlv Date</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+}
+
+function updateStats() {
+  const total     = orders.length;
+  const delivered = orders.filter(o => o.date_delivered).length;
+  const pending   = total - delivered;
+  $('statTotal').textContent     = total;
+  $('statPending').textContent   = pending;
+  $('statDelivered').textContent = delivered;
+}
+
+window.selectOrder = function(id) {
+  const order = orders.find(o => o.id === id);
+  if (!order) return;
+  editingId = id;
+  $('actionModalInfo').textContent = `${order.company} — ${order.product}`;
+  const delivBtn = $('deliveryBtn');
+  delivBtn.style.display = order.date_delivered ? 'none' : 'block';
+  $('actionModal').classList.add('open');
+};
+
+window.startDeliveryMode = function() {
+  closeModal('actionModal');
+  const order = orders.find(o => o.id === editingId);
+  if (!order) return;
+  populateForm(order);
+  setMode('delivery');
+  showScreen('entry');
+  formDirty = true;
+};
+
+window.startEditMode = function() {
+  closeModal('actionModal');
+  const order = orders.find(o => o.id === editingId);
+  if (!order) return;
+  populateForm(order);
+  setMode('edit');
+  showScreen('entry');
+  formDirty = true;
+};
+
+window.applyFilter = function() {
+  const col = $('filterCol').value;
+  const val = $('filterVal').value.toLowerCase().trim();
+  if (!col || !val) { filteredOrders = [...orders]; renderOrders(filteredOrders); return; }
+  filteredOrders = orders.filter(o => (o[col] || '').toLowerCase().includes(val));
+  renderOrders(filteredOrders);
+};
+
+window.showUndelivered = function() {
+  filteredOrders = orders.filter(o => !o.date_delivered);
+  renderOrders(filteredOrders);
+};
+
+window.clearFilter = function() {
+  $('filterCol').value = '';
+  $('filterVal').value = '';
+  filteredOrders = [...orders];
+  renderOrders(filteredOrders);
+};
+
+window.exportCSV = function() {
+  const header = ['Company','Date Ordered','Location','Product #','Qty Ordered','Qty Delivered','Date Delivered','Comments'];
+  const rows   = orders.map(o =>
+    [o.company, o.date_ordered, o.location, o.product,
+     o.qty_ordered, o.qty_delivered, o.date_delivered, o.comments]
+    .map(v => `"${(v||'').replace(/"/g,'""')}"`)
+    .join(',')
+  );
+  const csv  = [header.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `vmi_orders_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exported!');
+};
+
+// ── Autocomplete ──
+function setupAutocomplete(inputId, dropdownId, listKey) {
+  const input = $(inputId);
+  const drop  = $(dropdownId);
+
+  input.addEventListener('input', () => {
+    const val  = input.value.trim().toLowerCase();
+    formDirty  = true;
+    if (!val) { drop.style.display = 'none'; return; }
+
+    let items;
+    if (listKey === 'products') {
+      items = appLists.products.map(getProductName);
+    } else {
+      items = appLists[listKey] || [];
+    }
+
+    const matches = items.filter(i => i.toLowerCase().includes(val)).slice(0, 8);
+    if (!matches.length) { drop.style.display = 'none'; return; }
+
+    drop.innerHTML = matches.map(m =>
+      `<div class="ac-item" onmousedown="event.preventDefault()" onclick="selectAC('${inputId}','${dropdownId}','${listKey}','${m.replace(/'/g,"\\'")}')">
+        ${m}
+      </div>`
+    ).join('');
+    drop.style.display = 'block';
+  });
+
+  input.addEventListener('blur', () => {
+    setTimeout(() => { drop.style.display = 'none'; }, 150);
+  });
+}
+
+window.selectAC = function(inputId, dropdownId, listKey, value) {
+  $(inputId).value      = value;
+  $(dropdownId).style.display = 'none';
+  formDirty = true;
+  if (listKey === 'products') updateCaseHint(value);
+  // Advance focus to next field
+  const fields = ['dateOrdered','company','location','product','qtyOrdered','comments'];
+  const i = fields.indexOf(inputId);
+  if (i >= 0 && i < fields.length - 1) $(fields[i+1]).focus();
+};
+
+function updateCaseHint(productName) {
+  const entry = appLists.products.find(p => getProductName(p) === productName);
+  $('caseHint').textContent = entry ? `Case Qty: ${getProductCaseQty(entry)}` : '';
+}
+
+// ── Manage Lists ──
+window.switchListTab = function(tab) {
+  currentListTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  $('newCaseQty').style.display = tab === 'products' ? 'block' : 'none';
+  $('newListItem').placeholder  = tab === 'products' ? 'Product #...' : 'New item...';
+  renderListTab();
+};
+
+function renderListTab() {
+  const container = $('listContainer');
+  const items = appLists[currentListTab] || [];
+
+  if (!items.length) {
+    container.innerHTML = '<div class="empty-state" style="padding:24px">No items yet. Add one above.</div>';
+    return;
+  }
+
+  if (currentListTab === 'products') {
+    const sorted = [...items].sort((a,b) => getProductName(a).localeCompare(getProductName(b)));
+    container.innerHTML = `
+      <div class="list-item" style="background:var(--surface2); font-size:11px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text2)">
+        <span class="list-item-name">Product #</span>
+        <span class="list-item-qty">Case Qty</span>
+        <span style="width:120px"></span>
+      </div>
+      ${sorted.map(entry => `
+        <div class="list-item">
+          <span class="list-item-name">${getProductName(entry)}</span>
+          <span class="list-item-qty">${getProductCaseQty(entry) || '—'}</span>
+          <div style="display:flex; gap:6px">
+            <button class="btn-ghost btn-sm" onclick="editProductQty('${entry.replace(/'/g,"\\'")}')">Edit</button>
+            <button class="btn-danger btn-sm" onclick="removeListItem('${entry.replace(/'/g,"\\'")}')">Delete</button>
+          </div>
+        </div>
+      `).join('')}`;
+  } else {
+    const sorted = [...items].sort();
+    container.innerHTML = sorted.map(item => `
+      <div class="list-item">
+        <span class="list-item-name">${item}</span>
+        <button class="btn-danger btn-sm" style="margin-left:auto" onclick="removeListItem('${item.replace(/'/g,"\\'")}')">Delete</button>
+      </div>
+    `).join('');
+  }
+}
+
+window.addListItem = async function() {
+  const val = $('newListItem').value.trim();
+  if (!val) { toast('Please enter a value.', 'error'); return; }
+
+  if (currentListTab === 'products') {
+    const qty   = $('newCaseQty').value.trim() || '1';
+    const entry = `${val}|${qty}`;
+    const exists = appLists.products.some(p => getProductName(p) === val);
+    if (exists) { toast('Product already exists.', 'error'); return; }
+    appLists.products.push(entry);
+    $('newCaseQty').value = '';
+  } else {
+    if (appLists[currentListTab].includes(val)) {
+      toast('Item already exists.', 'error'); return;
+    }
+    appLists[currentListTab].push(val);
+  }
+
+  $('newListItem').value = '';
+  await saveLists();
+  renderListTab();
+  toast('Item added!');
+};
+
+window.removeListItem = async function(entry) {
+  if (!confirm(`Delete "${getProductName(entry)}" from the list?\n\nExisting orders will not be affected.`)) return;
+  const list = appLists[currentListTab];
+  const idx  = list.indexOf(entry);
+  if (idx > -1) list.splice(idx, 1);
+  await saveLists();
+  renderListTab();
+  toast('Item deleted.');
+};
+
+window.editProductQty = function(entry) {
+  editingProductEntry = entry;
+  $('editQtyProduct').textContent = `Product: ${getProductName(entry)}`;
+  $('editQtyInput').value = getProductCaseQty(entry) || '1';
+  $('editQtyModal').classList.add('open');
+};
+
+window.saveEditQty = async function() {
+  const newQty  = $('editQtyInput').value.trim() || '1';
+  const newEntry = `${getProductName(editingProductEntry)}|${newQty}`;
+  const idx = appLists.products.indexOf(editingProductEntry);
+  if (idx > -1) appLists.products[idx] = newEntry;
+  await saveLists();
+  closeModal('editQtyModal');
+  renderListTab();
+  toast('Case qty updated!');
+};
+
+// ── Field change tracking ──
+['dateOrdered','company','location','product','qtyOrdered',
+ 'dateDelivered','qtyDelivered','comments'].forEach(id => {
+  $(id).addEventListener('input', () => { formDirty = true; });
+});
+
+$('product').addEventListener('input', () => updateCaseHint($('product').value.trim()));
+
+// ── Init ──
+async function init() {
+  await loadLists();
+  setupAutocomplete('company',  'ac-company',  'companies');
+  setupAutocomplete('location', 'ac-location', 'locations');
+  setupAutocomplete('product',  'ac-product',  'products');
+  setMode('new');
+  $('dateOrdered').value = new Date().toISOString().split('T')[0];
+  $('dateOrdered').focus();
+}
+
+init();
+</script>
+
+</body>
+</html>
