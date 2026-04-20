@@ -865,6 +865,8 @@ let currentListTab = 'companies';
 let editingProductEntry = null;
 let formDirty    = false;
 let filteredOrders = [];
+let sortCol = '';
+let sortDir = 1; // 1=asc, -1=desc
 
 // ── Offline detection ──
 window.addEventListener('online',  () => document.getElementById('offlineBanner').classList.remove('show'));
@@ -1171,6 +1173,38 @@ function renderOrders(list) {
     return aD - bD;
   });
 
+  // Apply column sort if set
+  if (sortCol) {
+    sorted.sort((a, b) => {
+      let av = a[sortCol] || '';
+      let bv = b[sortCol] || '';
+      // Numeric sort for qty fields
+      if (sortCol === 'qty_ordered' || sortCol === 'qty_delivered') {
+        av = parseFloat(av) || 0;
+        bv = parseFloat(bv) || 0;
+        return (av - bv) * sortDir;
+      }
+      return av.localeCompare(bv) * sortDir;
+    });
+  }
+
+  const colDefs = [
+    { label: 'Company',   key: 'company' },
+    { label: 'Ordered',   key: 'date_ordered' },
+    { label: 'Location',  key: 'location' },
+    { label: 'Product #', key: 'product' },
+    { label: 'Ord Qty',   key: 'qty_ordered' },
+    { label: 'Dlv Qty',   key: 'qty_delivered' },
+    { label: 'Dlv Date',  key: 'date_delivered' },
+    { label: 'Status',    key: '' },
+  ];
+
+  const headerRow = colDefs.map(c => {
+    if (!c.key) return '<th>Status</th>';
+    const arrow = sortCol === c.key ? (sortDir === 1 ? ' ▲' : ' ▼') : '';
+    return `<th onclick="sortBy('${c.key}')" style="cursor:pointer; user-select:none">${c.label}${arrow}</th>`;
+  }).join('');
+
   const rows = sorted.map(o => `
     <tr class="${o.date_delivered ? 'delivered' : 'undelivered'}"
         onclick="selectOrder('${o.id}')">
@@ -1188,13 +1222,7 @@ function renderOrders(list) {
   container.innerHTML = `
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>Company</th><th>Ordered</th><th>Location</th>
-            <th>Product #</th><th>Ord Qty</th><th>Dlv Qty</th>
-            <th>Dlv Date</th><th>Status</th>
-          </tr>
-        </thead>
+        <thead><tr>${headerRow}</tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -1269,6 +1297,16 @@ window.clearFilter = function() {
   $('filterCol2').value = '';
   $('filterVal2').value = '';
   filteredOrders = [...orders];
+  renderOrders(filteredOrders);
+};
+
+window.sortBy = function(col) {
+  if (sortCol === col) {
+    sortDir *= -1; // Reverse direction
+  } else {
+    sortCol = col;
+    sortDir = 1;
+  }
   renderOrders(filteredOrders);
 };
 
