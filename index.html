@@ -715,19 +715,34 @@
   </div>
 
   <div class="card">
-    <div class="toolbar">
-      <select id="filterCol" style="max-width:160px">
-        <option value="">Filter by...</option>
-        <option value="company">Company</option>
-        <option value="location">Location</option>
-        <option value="product">Product #</option>
-        <option value="date_ordered">Date Ordered</option>
-        <option value="date_delivered">Date Delivered</option>
-      </select>
-      <input type="text" id="filterVal" placeholder="Search..." oninput="applyFilter()">
-      <button class="btn-success btn-sm" onclick="showUndelivered()">Undelivered</button>
-      <button class="btn-ghost btn-sm" onclick="clearFilter()">Show All</button>
-      <button class="btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+    <div class="toolbar" style="flex-direction:column; align-items:stretch; gap:8px">
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+        <select id="filterCol" style="flex:1; min-width:140px">
+          <option value="">Filter 1 by...</option>
+          <option value="company">Company</option>
+          <option value="location">Location</option>
+          <option value="product">Product #</option>
+          <option value="date_ordered">Date Ordered</option>
+          <option value="date_delivered">Date Delivered</option>
+        </select>
+        <input type="text" id="filterVal" placeholder="Search term 1..." oninput="applyFilter()" style="flex:2; min-width:140px">
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+        <select id="filterCol2" style="flex:1; min-width:140px">
+          <option value="">Filter 2 by...</option>
+          <option value="company">Company</option>
+          <option value="location">Location</option>
+          <option value="product">Product #</option>
+          <option value="date_ordered">Date Ordered</option>
+          <option value="date_delivered">Date Delivered</option>
+        </select>
+        <input type="text" id="filterVal2" placeholder="Search term 2..." oninput="applyFilter()" style="flex:2; min-width:140px">
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap">
+        <button class="btn-success btn-sm" onclick="showUndelivered()">Undelivered</button>
+        <button class="btn-ghost btn-sm" onclick="clearFilter()">Show All</button>
+        <button class="btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
+      </div>
     </div>
 
     <div id="ordersContent">
@@ -1225,10 +1240,21 @@ window.startEditMode = function() {
 };
 
 window.applyFilter = function() {
-  const col = $('filterCol').value;
-  const val = $('filterVal').value.toLowerCase().trim();
-  if (!col || !val) { filteredOrders = [...orders]; renderOrders(filteredOrders); return; }
-  filteredOrders = orders.filter(o => (o[col] || '').toLowerCase().includes(val));
+  const col1 = $('filterCol').value;
+  const val1 = $('filterVal').value.toLowerCase().trim();
+  const col2 = $('filterCol2').value;
+  const val2 = $('filterVal2').value.toLowerCase().trim();
+
+  let result = [...orders];
+
+  if (col1 && val1) {
+    result = result.filter(o => (o[col1] || '').toLowerCase().includes(val1));
+  }
+  if (col2 && val2) {
+    result = result.filter(o => (o[col2] || '').toLowerCase().includes(val2));
+  }
+
+  filteredOrders = result;
   renderOrders(filteredOrders);
 };
 
@@ -1238,8 +1264,10 @@ window.showUndelivered = function() {
 };
 
 window.clearFilter = function() {
-  $('filterCol').value = '';
-  $('filterVal').value = '';
+  $('filterCol').value  = '';
+  $('filterVal').value  = '';
+  $('filterCol2').value = '';
+  $('filterVal2').value = '';
   filteredOrders = [...orders];
   renderOrders(filteredOrders);
 };
