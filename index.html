@@ -6,6 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a2332">
+<meta name="owner" content="k2hme-10/09/2025">
 <title>VMI Orders</title>
 <link rel="manifest" href="#" id="manifest-link">
 <style>
@@ -325,6 +326,8 @@
     overflow-x: auto;
     border-radius: 10px;
     border: 1px solid var(--border);
+    max-height: calc(100vh - 280px);
+    overflow-y: auto;
   }
 
   table {
@@ -337,7 +340,7 @@
   thead {
     background: var(--surface2);
     position: sticky;
-    top: 56px;
+    top: 0;
   }
 
   th {
