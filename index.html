@@ -1196,6 +1196,11 @@ function validateForm() {
 
 window.submitOrder = async function() {
   if (!validateForm()) return;
+
+  // Disable submit button immediately to prevent double-tap duplicates
+  const submitBtn = $('submitBtn');
+  submitBtn.disabled = true;
+
   const data = getFormData();
 
   // Auto-add to lists
@@ -1218,12 +1223,15 @@ window.submitOrder = async function() {
       await addDoc(collection(db, 'orders'), data);
       toast('Order saved!');
     }
+    resetForm();
+    formDirty = false;
   } catch(e) {
     toast('Saved offline — will sync when online.', 'error');
+    resetForm();
+    formDirty = false;
+  } finally {
+    submitBtn.disabled = false;
   }
-
-  resetForm();
-  formDirty = false;
 };
 
 function resetForm(keepDate=true) {
@@ -1254,12 +1262,15 @@ window.confirmExit = function() {
     $('exitModal').classList.add('open');
   } else {
     window.close();
-    toast('You can close this browser tab.');
+    // Fallback for mobile browsers where window.close() doesn't work
+    setTimeout(() => {
+      toast('You can now close this tab.');
+    }, 300);
   }
 };
 
-window.saveAndExit    = function() { submitOrder().then(() => { closeModal('exitModal'); toast('Saved! You can close this tab.'); }); };
-window.discardAndExit = function() { closeModal('exitModal'); formDirty = false; resetForm(false); toast('Changes discarded.'); };
+window.saveAndExit    = function() { submitOrder().then(() => { closeModal('exitModal'); window.close(); setTimeout(() => toast('Saved! You can now close this tab.'), 300); }); };
+window.discardAndExit = function() { closeModal('exitModal'); formDirty = false; resetForm(false); window.close(); setTimeout(() => toast('Changes discarded. You can now close this tab.'), 300); };
 
 // ── Delete ──
 window.confirmDelete = function() { $('deleteModal').classList.add('open'); };
