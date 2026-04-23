@@ -970,37 +970,38 @@ function toast(msg, type='success') {
 
 function closeModal(id) { $(id).classList.remove('open'); }
 
-function formatDate(val) {
-  if (!val) return '';
-  // Convert YYYY-MM-DD (HTML date input) or MM-DD-YYYY to display
-  if (val.includes('-') && val.length === 10) {
-    const parts = val.split('-');
-    if (parts[0].length === 4) {
-      // YYYY-MM-DD → MM/DD/YYYY
-      return `${parts[1]}/${parts[2]}/${parts[0]}`;
-    }
-    // MM-DD-YYYY → MM/DD/YYYY
-    return val.replace(/-/g, '/');
-  }
-  return val;
-}
+// ── Date helpers ──
+// Storage format is always YYYY-MM-DD (sorts correctly as text)
+// Legacy formats: MM-DD-YYYY and MM/DD/YYYY are handled transparently
 
-function toInputDate(val) {
-  // Convert MM-DD-YYYY or MM/DD/YYYY to YYYY-MM-DD for HTML date input
+function normalizeDate(val) {
+  // Convert any date format to YYYY-MM-DD for storage/sorting
   if (!val) return '';
-  const clean = val.replace(/\//g, '-');
+  const clean = val.trim().replace(/\//g, '-');
   const parts = clean.split('-');
-  if (parts.length !== 3) return '';
+  if (parts.length !== 3) return val;
   if (parts[0].length === 4) return clean; // already YYYY-MM-DD
+  // MM-DD-YYYY → YYYY-MM-DD
   return `${parts[2]}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
 }
 
-function fromInputDate(val) {
-  // Convert YYYY-MM-DD to MM-DD-YYYY for storage
+function formatDate(val) {
+  // Display as MM/DD/YYYY regardless of storage format
   if (!val) return '';
-  const parts = val.split('-');
-  if (parts.length !== 3 || parts[0].length !== 4) return val;
-  return `${parts[1]}-${parts[2]}-${parts[0]}`;
+  const norm = normalizeDate(val);
+  const parts = norm.split('-');
+  if (parts.length !== 3) return val;
+  return `${parts[1]}/${parts[2]}/${parts[0]}`;
+}
+
+function toInputDate(val) {
+  // Convert any format to YYYY-MM-DD for HTML date input value
+  return normalizeDate(val);
+}
+
+function fromInputDate(val) {
+  // Store as YYYY-MM-DD (HTML date inputs already return this format)
+  return normalizeDate(val);
 }
 
 function getProductName(entry) {
