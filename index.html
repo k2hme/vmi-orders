@@ -781,7 +781,7 @@
     <button class="btn-primary" id="submitBtn" onclick="submitOrder()">Submit Order</button>
     <button class="btn-ghost" onclick="cancelEntry()">Cancel</button>
     <button class="btn-danger" id="deleteBtn" onclick="confirmDelete()" style="display:none">Delete</button>
-    <button class="btn-ghost" style="margin-left:auto" onclick="confirmExit()">Exit</button>
+    
   </div>
 
 </div>
@@ -895,8 +895,8 @@
     <h3>Unsaved Changes</h3>
     <p>You have unsaved changes. What would you like to do?</p>
     <div class="btn-row" style="flex-direction:column; gap:8px">
-      <button class="btn-primary" onclick="saveAndExit()">Save and Exit</button>
-      <button class="btn-ghost" onclick="discardAndExit()">Discard and Exit</button>
+      <button class="btn-primary" onclick="saveAndGoToOrders()">Save and Go to Orders</button>
+      <button class="btn-ghost" onclick="discardAndGoToOrders()">Discard and Go to Orders</button>
       <button class="btn-ghost" onclick="closeModal('exitModal')">Cancel</button>
     </div>
   </div>
@@ -954,7 +954,6 @@ let sortDir = 1; // 1=asc, -1=desc
 let activeFilter = 'undelivered'; // 'all' | 'undelivered' | 'partial'
 
 // ── Offline detection ──
-window.addEventListener('online',  () => document.getElementById('offlineBanner').classList.remove('show'));
 window.addEventListener('offline', () => document.getElementById('offlineBanner').classList.add('show'));
 if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
 
@@ -1215,41 +1214,100 @@ function validateForm() {
   return true;
 }
 
+// ── Offline queue ──
+function saveToOfflineQueue(data) {
+  const queue = JSON.parse(localStorage.getItem('vmi_offline_queue') || '[]');
+  const entry = { ...data, _offlineId: Date.now().toString(), _pendingSync: true };
+  queue.push(entry);
+  localStorage.setItem('vmi_offline_queue', JSON.stringify(queue));
+  // Also add to local orders so it shows in the list immediately
+  orders.push({ ...entry, id: entry._offlineId });
+  localStorage.setItem('vmi_orders', JSON.stringify(orders));
+  return entry;
+}
+
+async function syncOfflineQueue() {
+  const queue = JSON.parse(localStorage.getItem('vmi_offline_queue') || '[]');
+  if (!queue.length) return;
+  const remaining = [];
+  for (const entry of queue) {
+    try {
+      const { _offlineId, _pendingSync, ...data } = entry;
+      await addDoc(collection(db, 'orders'), data);
+    } catch(e) {
+      remaining.push(entry);
+    }
+  }
+  localStorage.setItem('vmi_offline_queue', JSON.stringify(remaining));
+  if (remaining.length === 0 && queue.length > 0) {
+    toast('Offline orders synced!');
+  }
+}
+
+// Sync when coming back online
+window.addEventListener('online', () => {
+  document.getElementById('offlineBanner').classList.remove('show');
+  syncOfflineQueue();
+});
+
 window.submitOrder = async function() {
   if (!validateForm()) return;
 
-  // Disable submit button immediately to prevent double-tap duplicates
   const submitBtn = $('submitBtn');
   submitBtn.disabled = true;
 
   const data = getFormData();
+  const isNew = !editingId;
 
   // Auto-add to lists
   if (data.company  && !appLists.companies.includes(data.company))
     appLists.companies.push(data.company);
   if (data.location && !appLists.locations.includes(data.location))
     appLists.locations.push(data.location);
-
   const existingProd = appLists.products.find(p => getProductName(p) === data.product);
   if (data.product && !existingProd)
     appLists.products.push(`${data.product}|1`);
-
   saveLists();
 
+  // If offline, save locally immediately — no hanging
+  if (!navigator.onLine) {
+    if (isNew) {
+      saveToOfflineQueue(data);
+      toast('Saved locally — will sync when back online.');
+      resetForm(true, true);
+    } else {
+      // For edits offline, update local cache
+      const idx = orders.findIndex(o => o.id === editingId);
+      if (idx >= 0) { orders[idx] = { ...orders[idx], ...data }; }
+      localStorage.setItem('vmi_orders', JSON.stringify(orders));
+      toast('Updated locally — will sync when back online.');
+      resetForm(false, false);
+    }
+    formDirty = false;
+    submitBtn.disabled = false;
+    return;
+  }
+
+  // Online — save to Firebase with a timeout fallback
   try {
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 8000)
+    );
     if (editingId) {
-      await updateDoc(doc(db, 'orders', editingId), data);
+      await Promise.race([updateDoc(doc(db, 'orders', editingId), data), timeout]);
       toast('Order updated!');
       resetForm(false, false);
     } else {
-      await addDoc(collection(db, 'orders'), data);
+      await Promise.race([addDoc(collection(db, 'orders'), data), timeout]);
       toast('Order saved!');
-      resetForm(true, true); // sticky: keep Date, Company, Location
+      resetForm(true, true);
     }
     formDirty = false;
   } catch(e) {
-    toast('Saved offline — will sync when online.', 'error');
-    resetForm(true, currentMode === 'new');
+    // Firebase timed out or failed — save offline
+    if (isNew) saveToOfflineQueue(data);
+    toast('Saved locally — will sync when back online.');
+    resetForm(true, isNew);
     formDirty = false;
   } finally {
     submitBtn.disabled = false;
@@ -1291,20 +1349,8 @@ window.cancelEntry = function() {
   resetForm(false);
 };
 
-window.confirmExit = function() {
-  if (formDirty) {
-    $('exitModal').classList.add('open');
-  } else {
-    window.close();
-    // Fallback for mobile browsers where window.close() doesn't work
-    setTimeout(() => {
-      toast('You can now close this tab.');
-    }, 300);
-  }
-};
-
-window.saveAndExit    = function() { submitOrder().then(() => { closeModal('exitModal'); window.close(); setTimeout(() => toast('Saved! You can now close this tab.'), 300); }); };
-window.discardAndExit = function() { closeModal('exitModal'); formDirty = false; resetForm(false); window.close(); setTimeout(() => toast('Changes discarded. You can now close this tab.'), 300); };
+window.saveAndGoToOrders    = function() { closeModal('exitModal'); submitOrder().then(() => showScreen('orders')); };
+window.discardAndGoToOrders = function() { closeModal('exitModal'); formDirty = false; resetForm(false); showScreen('orders'); };
 
 // ── Delete ──
 window.confirmDelete = function() { $('deleteModal').classList.add('open'); };
