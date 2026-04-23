@@ -410,6 +410,26 @@
     color: var(--yellow);
   }
 
+  .btn-filter {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s;
+  }
+
+  .btn-filter:hover { border-color: var(--accent); color: var(--text); }
+
+  .btn-filter.active {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #fff;
+  }
+
   /* ── Modal ── */
   .modal-overlay {
     display: none;
@@ -802,8 +822,9 @@
         <input type="text" id="filterVal2" placeholder="Search term 2..." oninput="applyFilter()" style="flex:2; min-width:140px">
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap">
-        <button class="btn-success btn-sm" onclick="showUndelivered()">Undelivered</button>
-        <button class="btn-ghost btn-sm" onclick="clearFilter()">Show All</button>
+        <button class="btn-filter btn-sm" id="filterBtn-undelivered" onclick="setStatusFilter('undelivered')">Undelivered</button>
+        <button class="btn-filter btn-sm" id="filterBtn-partial" onclick="setStatusFilter('partial')">Partial</button>
+        <button class="btn-filter btn-sm" id="filterBtn-all" onclick="setStatusFilter('all')">Show All</button>
         <button class="btn-ghost btn-sm" onclick="exportCSV()">Export CSV</button>
       </div>
     </div>
@@ -930,6 +951,7 @@ let formDirty    = false;
 let filteredOrders = [];
 let sortCol = '';
 let sortDir = 1; // 1=asc, -1=desc
+let activeFilter = 'undelivered'; // 'all' | 'undelivered' | 'partial'
 
 // ── Offline detection ──
 window.addEventListener('online',  () => document.getElementById('offlineBanner').classList.remove('show'));
@@ -994,15 +1016,13 @@ async function loadOrders() {
   try {
     const snap = await getDocs(collection(db, 'orders'));
     orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // Cache locally
     localStorage.setItem('vmi_orders', JSON.stringify(orders));
   } catch(e) {
     console.warn('Firebase offline, loading cache:', e);
     const cached = localStorage.getItem('vmi_orders');
     if (cached) orders = JSON.parse(cached);
   }
-  filteredOrders = [...orders];
-  renderOrders(filteredOrders);
+  applyAllFilters();
   updateStats();
 }
 
@@ -1043,7 +1063,7 @@ window.showScreen = function(name) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   $(`screen-${name}`).classList.add('active');
   $(`nav-${name}`).classList.add('active');
-  if (name === 'orders') { loadOrders(); }
+  if (name === 'orders') { loadOrders().then(() => applyAllFilters()); }
   if (name === 'lists')  { renderListTab(); }
 };
 
@@ -1219,35 +1239,48 @@ window.submitOrder = async function() {
     if (editingId) {
       await updateDoc(doc(db, 'orders', editingId), data);
       toast('Order updated!');
+      resetForm(false, false);
     } else {
       await addDoc(collection(db, 'orders'), data);
       toast('Order saved!');
+      resetForm(true, true); // sticky: keep Date, Company, Location
     }
-    resetForm();
     formDirty = false;
   } catch(e) {
     toast('Saved offline — will sync when online.', 'error');
-    resetForm();
+    resetForm(true, currentMode === 'new');
     formDirty = false;
   } finally {
     submitBtn.disabled = false;
   }
 };
 
-function resetForm(keepDate=true) {
-  const lastDate = $('dateOrdered').value;
+function resetForm(keepDate=true, stickyNewOrder=false) {
+  const lastDate     = $('dateOrdered').value;
+  const lastCompany  = $('company').value;
+  const lastLocation = $('location').value;
+
   ['dateOrdered','company','location','product','qtyOrdered','comments'].forEach(id => $(id).value = '');
-  if (keepDate && lastDate) $('dateOrdered').value = lastDate;
-  else $('dateOrdered').value = new Date().toISOString().split('T')[0];
+
+  if (stickyNewOrder) {
+    // After new order submit — keep Date, Company, Location
+    $('dateOrdered').value = lastDate || new Date().toISOString().split('T')[0];
+    $('company').value     = lastCompany;
+    $('location').value    = lastLocation;
+  } else if (keepDate && lastDate) {
+    $('dateOrdered').value = lastDate;
+  } else {
+    $('dateOrdered').value = new Date().toISOString().split('T')[0];
+  }
+
   $('caseHint').textContent = '';
-  // Reset delivery rows to one blank row
   $('deliveryRows').innerHTML = '';
   addDeliveryRow();
   updateDeliveryTotal();
   editingId = null;
   setMode('new');
   formDirty = false;
-  $('dateOrdered').focus();
+  $('product').focus();
 }
 
 window.cancelEntry = function() {
@@ -1296,14 +1329,14 @@ function renderOrders(list) {
     return;
   }
 
-  // Sort: undelivered first
-  const sorted = [...list].sort((a,b) => {
-    const aD = a.date_delivered ? 1 : 0;
-    const bD = b.date_delivered ? 1 : 0;
-    return aD - bD;
+  // Default sort: Date Ordered descending (newest first)
+  const sorted = [...list].sort((a, b) => {
+    const ad = a.date_ordered || '';
+    const bd = b.date_ordered || '';
+    return bd.localeCompare(ad); // descending
   });
 
-  // Apply column sort if set
+  // Apply column sort if user has clicked a column header
   if (sortCol) {
     sorted.sort((a, b) => {
       let av = a[sortCol] || '';
@@ -1423,7 +1456,25 @@ window.startEditMode = function() {
   formDirty = true;
 };
 
-window.applyFilter = function() {
+// ── Filter helpers ──
+function getDeliveryStatus(o) {
+  const totalDelivered = Array.isArray(o.deliveries)
+    ? o.deliveries.reduce((s, d) => s + (parseFloat(d.qty) || 0), 0)
+    : (parseFloat(o.qty_delivered) || 0);
+  const qtyOrdered = parseFloat(o.qty_ordered) || 0;
+  const fullyDelivered = qtyOrdered > 0 ? totalDelivered >= qtyOrdered : !!o.date_delivered;
+  const partialDelivered = totalDelivered > 0 && !fullyDelivered;
+  return { fullyDelivered, partialDelivered, totalDelivered };
+}
+
+function updateFilterButtons() {
+  ['all','undelivered','partial'].forEach(f => {
+    const btn = $(`filterBtn-${f}`);
+    if (btn) btn.classList.toggle('active', activeFilter === f);
+  });
+}
+
+function applyAllFilters() {
   const col1 = $('filterCol').value;
   const val1 = $('filterVal').value.toLowerCase().trim();
   const col2 = $('filterCol2').value;
@@ -1431,36 +1482,41 @@ window.applyFilter = function() {
 
   let result = [...orders];
 
-  if (col1 && val1) {
-    result = result.filter(o => (o[col1] || '').toLowerCase().includes(val1));
+  // Apply status filter first
+  if (activeFilter === 'undelivered') {
+    result = result.filter(o => {
+      const { fullyDelivered, partialDelivered } = getDeliveryStatus(o);
+      return !fullyDelivered;
+    });
+  } else if (activeFilter === 'partial') {
+    result = result.filter(o => getDeliveryStatus(o).partialDelivered);
   }
-  if (col2 && val2) {
-    result = result.filter(o => (o[col2] || '').toLowerCase().includes(val2));
-  }
+
+  // Then apply column filters
+  if (col1 && val1) result = result.filter(o => (o[col1] || '').toLowerCase().includes(val1));
+  if (col2 && val2) result = result.filter(o => (o[col2] || '').toLowerCase().includes(val2));
 
   filteredOrders = result;
   renderOrders(filteredOrders);
+  updateFilterButtons();
+}
+
+window.applyFilter = function() { applyAllFilters(); };
+
+window.setStatusFilter = function(filter) {
+  activeFilter = filter;
+  if (filter === 'all') {
+    $('filterCol').value  = '';
+    $('filterVal').value  = '';
+    $('filterCol2').value = '';
+    $('filterVal2').value = '';
+  }
+  applyAllFilters();
 };
 
-window.showUndelivered = function() {
-  filteredOrders = orders.filter(o => {
-    const totalDelivered = Array.isArray(o.deliveries)
-      ? o.deliveries.reduce((s, d) => s + (parseFloat(d.qty) || 0), 0)
-      : (parseFloat(o.qty_delivered) || 0);
-    const qtyOrdered = parseFloat(o.qty_ordered) || 0;
-    return qtyOrdered > 0 ? totalDelivered < qtyOrdered : !o.date_delivered;
-  });
-  renderOrders(filteredOrders);
-};
-
-window.clearFilter = function() {
-  $('filterCol').value  = '';
-  $('filterVal').value  = '';
-  $('filterCol2').value = '';
-  $('filterVal2').value = '';
-  filteredOrders = [...orders];
-  renderOrders(filteredOrders);
-};
+// Keep old names working just in case
+window.showUndelivered = function() { setStatusFilter('undelivered'); };
+window.clearFilter     = function() { setStatusFilter('all'); };
 
 window.sortBy = function(col) {
   if (sortCol === col) {
