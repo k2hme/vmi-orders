@@ -967,7 +967,7 @@ function toast(msg, type='success') {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-function closeModal(id) { $(id).classList.remove('open'); }
+window.closeModal = function(id) { $(id).classList.remove('open'); }
 
 // ── Date helpers ──
 // Storage format is always YYYY-MM-DD (sorts correctly as text)
