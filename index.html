@@ -8,6 +8,9 @@
 <meta name="theme-color" content="#1a2332">
 <meta name="owner" content="k2hme-10/09/2025">
 <title>VMI Orders</title>
+<!-- ── Favicon (embedded SVG — no external file needed) ── -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjE4IiBmaWxsPSIjMGYxOTIzIi8+CiAgPHJlY3QgeD0iMTgiIHk9IjQwIiB3aWR0aD0iNjIiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMmQ3ZGQyIi8+CiAgPHJlY3QgeD0iNDQiIHk9IjQwIiB3aWR0aD0iMTIiIGhlaWdodD0iNTAiIGZpbGw9IiMyNDcwYzAiIG9wYWNpdHk9IjAuNTUiLz4KICA8cmVjdCB4PSIxNCIgeT0iMjgiIHdpZHRoPSI3MCIgaGVpZ2h0PSIxNCIgcng9IjMiIGZpbGw9IiMxZGI5N2EiLz4KICA8cGF0aCBkPSJNMTQgMjggTDUwIDI4IEw1MCAzNiBRMzIgNDAgMTQgMzYgWiIgZmlsbD0iIzE5YTM2YyIvPgogIDxwYXRoIGQ9Ik01MCAyOCBMODQgMjggTDg0IDM2IFE2OCA0MCA1MCAzNiBaIiBmaWxsPSIjMjJjOTdmIi8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iMjgiIHgyPSI1MCIgeTI9IjQyIiBzdHJva2U9IiMwZjE5MjMiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8Y2lyY2xlIGN4PSI2OCIgY3k9Ijc0IiByPSIxOCIgZmlsbD0iIzBmMTkyMyIvPgogIDxjaXJjbGUgY3g9IjY4IiBjeT0iNzQiIHI9IjE1IiBmaWxsPSIjMWRiOTdhIi8+CiAgPHBvbHlsaW5lIHBvaW50cz0iNTksNzQgNjUsODEgNzgsNjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=">
+<!-- ── PWA manifest placeholder — filled by JS below ── -->
 <link rel="manifest" href="#" id="manifest-link">
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -64,14 +67,9 @@
 
   .logo-icon {
     width: 32px; height: 32px;
-    background: var(--accent);
     border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    font-weight: 500;
-    color: #fff;
-    letter-spacing: 1px;
+    overflow: hidden;
   }
 
   nav { display: flex; gap: 4px; }
@@ -705,7 +703,20 @@
 <!-- Header -->
 <header>
   <div class="logo">
-    <div class="logo-icon">VMI</div>
+    <!-- ── App icon (delivery box + checkmark) ── -->
+    <div class="logo-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+        <rect width="32" height="32" rx="7" fill="#0f1923"/>
+        <rect x="4" y="13" width="24" height="16" rx="2" fill="#2d7dd2"/>
+        <rect x="13" y="13" width="6" height="16" fill="#2470c0" opacity="0.5"/>
+        <rect x="3" y="8" width="26" height="6" rx="2" fill="#1db97a"/>
+        <path d="M3 8 L16 8 L16 12 Q9 14 3 12 Z" fill="#19a36c"/>
+        <path d="M16 8 L29 8 L29 12 Q23 14 16 12 Z" fill="#22c97f"/>
+        <line x1="16" y1="8" x2="16" y2="15" stroke="#0f1923" stroke-width="1.5" stroke-linecap="round"/>
+        <circle cx="23" cy="23" r="6" fill="#1db97a"/>
+        <polyline points="19,23 22,27 28,19" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
     VMI Orders
   </div>
   <nav>
@@ -781,7 +792,6 @@
     <button class="btn-primary" id="submitBtn" onclick="submitOrder()">Submit Order</button>
     <button class="btn-ghost" onclick="cancelEntry()">Cancel</button>
     <button class="btn-danger" id="deleteBtn" onclick="confirmDelete()" style="display:none">Delete</button>
-    
   </div>
 
 </div>
@@ -927,6 +937,24 @@ import { getFirestore, collection, getDocs,
          addDoc, updateDoc, deleteDoc,
          doc, setDoc, getDoc }                  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
+// ── PWA Manifest with embedded icon ──
+const _iconUri = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj4KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjE4IiBmaWxsPSIjMGYxOTIzIi8+CiAgPHJlY3QgeD0iMTgiIHk9IjQwIiB3aWR0aD0iNjIiIGhlaWdodD0iNTAiIHJ4PSI0IiBmaWxsPSIjMmQ3ZGQyIi8+CiAgPHJlY3QgeD0iNDQiIHk9IjQwIiB3aWR0aD0iMTIiIGhlaWdodD0iNTAiIGZpbGw9IiMyNDcwYzAiIG9wYWNpdHk9IjAuNTUiLz4KICA8cmVjdCB4PSIxNCIgeT0iMjgiIHdpZHRoPSI3MCIgaGVpZ2h0PSIxNCIgcng9IjMiIGZpbGw9IiMxZGI5N2EiLz4KICA8cGF0aCBkPSJNMTQgMjggTDUwIDI4IEw1MCAzNiBRMzIgNDAgMTQgMzYgWiIgZmlsbD0iIzE5YTM2YyIvPgogIDxwYXRoIGQ9Ik01MCAyOCBMODQgMjggTDg0IDM2IFE2OCA0MCA1MCAzNiBaIiBmaWxsPSIjMjJjOTdmIi8+CiAgPGxpbmUgeDE9IjUwIiB5MT0iMjgiIHgyPSI1MCIgeTI9IjQyIiBzdHJva2U9IiMwZjE5MjMiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8Y2lyY2xlIGN4PSI2OCIgY3k9Ijc0IiByPSIxOCIgZmlsbD0iIzBmMTkyMyIvPgogIDxjaXJjbGUgY3g9IjY4IiBjeT0iNzQiIHI9IjE1IiBmaWxsPSIjMWRiOTdhIi8+CiAgPHBvbHlsaW5lIHBvaW50cz0iNTksNzQgNjUsODEgNzgsNjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIzLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4=';
+const _manifest = {
+  name: 'VMI Orders',
+  short_name: 'VMI Orders',
+  description: 'Inventory replenishment and delivery tracking',
+  start_url: '.',
+  display: 'standalone',
+  background_color: '#0f1923',
+  theme_color: '#1a2332',
+  icons: [
+    { src: _iconUri, sizes: '192x192', type: 'image/svg+xml' },
+    { src: _iconUri, sizes: '512x512', type: 'image/svg+xml' }
+  ]
+};
+const _mBlob = new Blob([JSON.stringify(_manifest)], {type: 'application/manifest+json'});
+document.getElementById('manifest-link').href = URL.createObjectURL(_mBlob);
+
 // ── Firebase init ──
 const firebaseConfig = {
   apiKey:            "AIzaSyAyMZZL8lTV2gE7yX7uoJhhiVewrdxfW6E",
@@ -941,17 +969,17 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
 // ── App state ──
-let orders       = [];   // [{id, company, date_ordered, location, product, qty_ordered, deliveries:[{qty,date}], comments}]
+let orders       = [];
 let appLists     = { companies: [], locations: [], products: [] };
-let currentMode  = 'new';   // 'new' | 'delivery' | 'edit'
+let currentMode  = 'new';
 let editingId    = null;
 let currentListTab = 'companies';
 let editingProductEntry = null;
 let formDirty    = false;
 let filteredOrders = [];
 let sortCol = '';
-let sortDir = 1; // 1=asc, -1=desc
-let activeFilter = 'undelivered'; // 'all' | 'undelivered' | 'partial'
+let sortDir = 1;
+let activeFilter = 'undelivered';
 
 // ── Offline detection ──
 window.addEventListener('offline', () => document.getElementById('offlineBanner').classList.add('show'));
@@ -967,25 +995,20 @@ function toast(msg, type='success') {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
-window.closeModal = function(id) { $(id).classList.remove('open'); }
+// ── FIX: closeModal exposed globally so inline onclick handlers can reach it ──
+window.closeModal = function(id) { $(id).classList.remove('open'); };
 
 // ── Date helpers ──
-// Storage format is always YYYY-MM-DD (sorts correctly as text)
-// Legacy formats: MM-DD-YYYY and MM/DD/YYYY are handled transparently
-
 function normalizeDate(val) {
-  // Convert any date format to YYYY-MM-DD for storage/sorting
   if (!val) return '';
   const clean = val.trim().replace(/\//g, '-');
   const parts = clean.split('-');
   if (parts.length !== 3) return val;
-  if (parts[0].length === 4) return clean; // already YYYY-MM-DD
-  // MM-DD-YYYY → YYYY-MM-DD
+  if (parts[0].length === 4) return clean;
   return `${parts[2]}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
 }
 
 function formatDate(val) {
-  // Display as MM/DD/YYYY regardless of storage format
   if (!val) return '';
   const norm = normalizeDate(val);
   const parts = norm.split('-');
@@ -993,15 +1016,8 @@ function formatDate(val) {
   return `${parts[1]}/${parts[2]}/${parts[0]}`;
 }
 
-function toInputDate(val) {
-  // Convert any format to YYYY-MM-DD for HTML date input value
-  return normalizeDate(val);
-}
-
-function fromInputDate(val) {
-  // Store as YYYY-MM-DD (HTML date inputs already return this format)
-  return normalizeDate(val);
-}
+function toInputDate(val) { return normalizeDate(val); }
+function fromInputDate(val) { return normalizeDate(val); }
 
 function getProductName(entry) {
   return entry.includes('|') ? entry.split('|')[0].trim() : entry.trim();
@@ -1075,7 +1091,6 @@ function setMode(mode) {
   const deleteBtn = $('deleteBtn');
   const delivCard = $('deliveryCard');
 
-  // Reset order fields enabled
   ['dateOrdered','company','location','product','qtyOrdered','comments'].forEach(id => {
     const el = $(id);
     el.disabled = false;
@@ -1103,7 +1118,6 @@ function setMode(mode) {
     });
     $('addDeliveryBtn').disabled = false;
     setDeliveryRowsLocked(false);
-    // Focus first delivery date input
     const firstDate = document.querySelector('.delivery-date-input');
     if (firstDate) firstDate.focus();
   } else if (mode === 'edit') {
@@ -1138,13 +1152,11 @@ function populateForm(order) {
   $('comments').value      = order.comments      || '';
   updateCaseHint(order.product || '');
 
-  // Populate delivery rows — support old single-delivery format and new array format
   $('deliveryRows').innerHTML = '';
   let deliveries = [];
   if (Array.isArray(order.deliveries) && order.deliveries.length) {
     deliveries = order.deliveries;
   } else if (order.date_delivered || order.qty_delivered) {
-    // Migrate old format
     deliveries = [{ qty: order.qty_delivered || '', date: order.date_delivered || '' }];
   }
   if (deliveries.length) {
@@ -1165,7 +1177,6 @@ function getFormData() {
     }
   });
 
-  // For backwards-compat / table display: use last filled delivery as top-level fields
   const lastDelivery = deliveries[deliveries.length - 1] || {};
 
   return {
@@ -1176,7 +1187,6 @@ function getFormData() {
     qty_ordered:    $('qtyOrdered').value.replace(/,/g,'').trim(),
     comments:       $('comments').value.trim(),
     deliveries,
-    // Keep legacy fields so existing table/export code still works
     qty_delivered:  deliveries.reduce((sum, d) => sum + (parseFloat(d.qty) || 0), 0) || '',
     date_delivered: lastDelivery.date || '',
   };
@@ -1220,7 +1230,6 @@ function saveToOfflineQueue(data) {
   const entry = { ...data, _offlineId: Date.now().toString(), _pendingSync: true };
   queue.push(entry);
   localStorage.setItem('vmi_offline_queue', JSON.stringify(queue));
-  // Also add to local orders so it shows in the list immediately
   orders.push({ ...entry, id: entry._offlineId });
   localStorage.setItem('vmi_orders', JSON.stringify(orders));
   return entry;
@@ -1244,7 +1253,6 @@ async function syncOfflineQueue() {
   }
 }
 
-// Sync when coming back online
 window.addEventListener('online', () => {
   document.getElementById('offlineBanner').classList.remove('show');
   syncOfflineQueue();
@@ -1259,7 +1267,6 @@ window.submitOrder = async function() {
   const data = getFormData();
   const isNew = !editingId;
 
-  // Auto-add to lists
   if (data.company  && !appLists.companies.includes(data.company))
     appLists.companies.push(data.company);
   if (data.location && !appLists.locations.includes(data.location))
@@ -1269,14 +1276,12 @@ window.submitOrder = async function() {
     appLists.products.push(`${data.product}|1`);
   saveLists();
 
-  // If offline, save locally immediately — no hanging
   if (!navigator.onLine) {
     if (isNew) {
       saveToOfflineQueue(data);
       toast('Saved locally — will sync when back online.');
       resetForm(true, true);
     } else {
-      // For edits offline, update local cache
       const idx = orders.findIndex(o => o.id === editingId);
       if (idx >= 0) { orders[idx] = { ...orders[idx], ...data }; }
       localStorage.setItem('vmi_orders', JSON.stringify(orders));
@@ -1288,7 +1293,6 @@ window.submitOrder = async function() {
     return;
   }
 
-  // Online — save to Firebase with a timeout fallback
   try {
     const timeout = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('timeout')), 8000)
@@ -1304,7 +1308,6 @@ window.submitOrder = async function() {
     }
     formDirty = false;
   } catch(e) {
-    // Firebase timed out or failed — save offline
     if (isNew) saveToOfflineQueue(data);
     toast('Saved locally — will sync when back online.');
     resetForm(true, isNew);
@@ -1322,7 +1325,6 @@ function resetForm(keepDate=true, stickyNewOrder=false) {
   ['dateOrdered','company','location','product','qtyOrdered','comments'].forEach(id => $(id).value = '');
 
   if (stickyNewOrder) {
-    // After new order submit — keep Date, Company, Location
     $('dateOrdered').value = lastDate || new Date().toISOString().split('T')[0];
     $('company').value     = lastCompany;
     $('location').value    = lastLocation;
@@ -1349,8 +1351,8 @@ window.cancelEntry = function() {
   resetForm(false);
 };
 
-window.saveAndGoToOrders    = function() { closeModal('exitModal'); submitOrder().then(() => showScreen('orders')); };
-window.discardAndGoToOrders = function() { closeModal('exitModal'); formDirty = false; resetForm(false); showScreen('orders'); };
+window.saveAndGoToOrders    = function() { window.closeModal('exitModal'); submitOrder().then(() => showScreen('orders')); };
+window.discardAndGoToOrders = function() { window.closeModal('exitModal'); formDirty = false; resetForm(false); showScreen('orders'); };
 
 // ── Delete ──
 window.confirmDelete = function() { $('deleteModal').classList.add('open'); };
@@ -1363,7 +1365,7 @@ window.deleteOrder = async function() {
   } catch(e) {
     toast('Delete failed — check connection.', 'error');
   }
-  closeModal('deleteModal');
+  window.closeModal('deleteModal');
   resetForm(false);
   formDirty = false;
 };
@@ -1376,19 +1378,16 @@ function renderOrders(list) {
     return;
   }
 
-  // Default sort: Date Ordered descending (newest first)
   const sorted = [...list].sort((a, b) => {
     const ad = a.date_ordered || '';
     const bd = b.date_ordered || '';
-    return bd.localeCompare(ad); // descending
+    return bd.localeCompare(ad);
   });
 
-  // Apply column sort if user has clicked a column header
   if (sortCol) {
     sorted.sort((a, b) => {
       let av = a[sortCol] || '';
       let bv = b[sortCol] || '';
-      // Numeric sort for qty fields
       if (sortCol === 'qty_ordered' || sortCol === 'qty_delivered') {
         av = parseFloat(av) || 0;
         bv = parseFloat(bv) || 0;
@@ -1473,7 +1472,6 @@ window.selectOrder = function(id) {
   editingId = id;
   $('actionModalInfo').textContent = `${order.company} — ${order.product}`;
   const delivBtn = $('deliveryBtn');
-  // Show delivery button if not fully delivered
   const totalDelivered = Array.isArray(order.deliveries)
     ? order.deliveries.reduce((s, d) => s + (parseFloat(d.qty) || 0), 0)
     : (parseFloat(order.qty_delivered) || 0);
@@ -1484,7 +1482,7 @@ window.selectOrder = function(id) {
 };
 
 window.startDeliveryMode = function() {
-  closeModal('actionModal');
+  window.closeModal('actionModal');
   const order = orders.find(o => o.id === editingId);
   if (!order) return;
   populateForm(order);
@@ -1494,7 +1492,7 @@ window.startDeliveryMode = function() {
 };
 
 window.startEditMode = function() {
-  closeModal('actionModal');
+  window.closeModal('actionModal');
   const order = orders.find(o => o.id === editingId);
   if (!order) return;
   populateForm(order);
@@ -1529,17 +1527,15 @@ function applyAllFilters() {
 
   let result = [...orders];
 
-  // Apply status filter first
   if (activeFilter === 'undelivered') {
     result = result.filter(o => {
-      const { fullyDelivered, partialDelivered } = getDeliveryStatus(o);
+      const { fullyDelivered } = getDeliveryStatus(o);
       return !fullyDelivered;
     });
   } else if (activeFilter === 'partial') {
     result = result.filter(o => getDeliveryStatus(o).partialDelivered);
   }
 
-  // Then apply column filters
   if (col1 && val1) result = result.filter(o => (o[col1] || '').toLowerCase().includes(val1));
   if (col2 && val2) result = result.filter(o => (o[col2] || '').toLowerCase().includes(val2));
 
@@ -1561,13 +1557,12 @@ window.setStatusFilter = function(filter) {
   applyAllFilters();
 };
 
-// Keep old names working just in case
 window.showUndelivered = function() { setStatusFilter('undelivered'); };
 window.clearFilter     = function() { setStatusFilter('all'); };
 
 window.sortBy = function(col) {
   if (sortCol === col) {
-    sortDir *= -1; // Reverse direction
+    sortDir *= -1;
   } else {
     sortCol = col;
     sortDir = 1;
@@ -1585,7 +1580,7 @@ window.exportCSV = function() {
     deliveries.forEach((d, i) => {
       rows.push([
         o.company, o.date_ordered, o.location, o.product,
-        i === 0 ? o.qty_ordered : '',  // only show order qty on first row
+        i === 0 ? o.qty_ordered : '',
         d.qty, d.date, i === 0 ? o.comments : ''
       ].map(v => `"${(v||'').toString().replace(/"/g,'""')}"`)
        .join(','));
@@ -1640,7 +1635,6 @@ window.selectAC = function(inputId, dropdownId, listKey, value) {
   $(dropdownId).style.display = 'none';
   formDirty = true;
   if (listKey === 'products') updateCaseHint(value);
-  // Advance focus to next field
   const fields = ['dateOrdered','company','location','product','qtyOrdered','comments'];
   const i = fields.indexOf(inputId);
   if (i >= 0 && i < fields.length - 1) $(fields[i+1]).focus();
@@ -1746,7 +1740,7 @@ window.saveEditQty = async function() {
   const idx = appLists.products.indexOf(editingProductEntry);
   if (idx > -1) appLists.products[idx] = newEntry;
   await saveLists();
-  closeModal('editQtyModal');
+  window.closeModal('editQtyModal');
   renderListTab();
   toast('Case qty updated!');
 };
@@ -1790,7 +1784,6 @@ window.removeDeliveryRow = function(btn) {
   const row = btn.closest('.delivery-row');
   const allRows = $('deliveryRows').querySelectorAll('.delivery-row');
   if (allRows.length <= 1) {
-    // Clear the last row instead of removing it
     row.querySelector('.delivery-date-input').value = '';
     row.querySelector('.delivery-qty-input').value  = '';
     updateDeliveryTotal();
@@ -1810,7 +1803,7 @@ function renumberDeliveryRows() {
   });
 }
 
-function updateDeliveryTotal() {
+window.updateDeliveryTotal = function() {
   const qtyOrdered = parseFloat($('qtyOrdered').value) || 0;
   let totalDelivered = 0;
   document.querySelectorAll('.delivery-qty-input').forEach(inp => {
@@ -1829,7 +1822,7 @@ function updateDeliveryTotal() {
     el.textContent = label;
     el.className = 'delivery-total';
   }
-}
+};
 
 // ── Init ──
 async function init() {
@@ -1837,7 +1830,7 @@ async function init() {
   setupAutocomplete('company',  'ac-company',  'companies');
   setupAutocomplete('location', 'ac-location', 'locations');
   setupAutocomplete('product',  'ac-product',  'products');
-  addDeliveryRow();  // start with one blank delivery row
+  addDeliveryRow();
   setMode('new');
   $('dateOrdered').value = new Date().toISOString().split('T')[0];
   $('dateOrdered').focus();
